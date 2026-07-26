@@ -1,0 +1,105 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+@import 'shadcn/tailwind.css';
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --font-sans: 'Geist', 'Geist Fallback';
+  --font-mono: 'Geist Mono', 'Geist Mono Fallback';
+
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-foreground: var(--foreground);
+  --color-background: var(--background);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+}
+
+:root {
+  color-scheme: dark;
+
+  /* near-black base */
+  --background: oklch(0.16 0.006 260);
+  --foreground: oklch(0.96 0.004 260);
+
+  --card: oklch(0.213 0.008 260);
+  --card-foreground: oklch(0.96 0.004 260);
+  --popover: oklch(0.213 0.008 260);
+  --popover-foreground: oklch(0.96 0.004 260);
+
+  /* signal amber — the one brand color */
+  --primary: oklch(0.81 0.163 78);
+  --primary-foreground: oklch(0.18 0.02 78);
+
+  --secondary: oklch(0.27 0.008 260);
+  --secondary-foreground: oklch(0.96 0.004 260);
+  --muted: oklch(0.25 0.008 260);
+  --muted-foreground: oklch(0.68 0.01 260);
+  --accent: oklch(0.28 0.01 260);
+  --accent-foreground: oklch(0.96 0.004 260);
+
+  /* alert red, used only for penny/expiring signals */
+  --destructive: oklch(0.63 0.21 25);
+  --destructive-foreground: oklch(0.98 0.01 25);
+
+  --border: oklch(1 0 0 / 12%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.81 0.163 78);
+
+  --radius: 0.5rem;
+}
+
+.dark {
+  color-scheme: dark;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+@utility grid-noise {
+  background-image: linear-gradient(
+      to right,
+      color-mix(in oklab, var(--foreground) 5%, transparent) 1px,
+      transparent 1px
+    ),
+    linear-gradient(to bottom, color-mix(in oklab, var(--foreground) 5%, transparent) 1px, transparent 1px);
+  background-size: 44px 44px;
+}
+
+@keyframes ticker {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@utility animate-ticker {
+  animation: ticker 38s linear infinite;
+}
