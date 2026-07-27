@@ -148,11 +148,11 @@ export function DealCard({ deal }: { deal: Deal }) {
             }
           }}
         >
-          <DialogTrigger asChild>
-            <Button variant="outline" size="sm" className="font-mono text-xs">
-              Check my store
-            </Button>
-          </DialogTrigger>
+          <DialogTrigger
+  render={<Button variant="outline" size="sm" className="font-mono text-xs" />}
+>
+  Check my store
+</DialogTrigger>
           <DialogContent className="sm:max-w-sm">
             <DialogHeader>
               <DialogTitle className="font-mono text-sm">Check {store.name} near you</DialogTitle>
