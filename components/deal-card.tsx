@@ -19,9 +19,10 @@ function money(n: number) {
 }
 
 type CheckResult = {
-  status: 'confirmed' | 'not_confirmed' | 'unknown'
+  status: 'pending_confirmation' | 'unknown'
   message: string
   nearestStore?: string
+  nearestAddress?: string
   distanceMiles?: number
 }
 
@@ -137,7 +138,16 @@ export function DealCard({ deal }: { deal: Deal }) {
           </span>
         </div>
 
-        <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) { setResult(null); setError(null) } }}>
+        <Dialog
+          open={open}
+          onOpenChange={(o) => {
+            setOpen(o)
+            if (!o) {
+              setResult(null)
+              setError(null)
+            }
+          }}
+        >
           <DialogTrigger asChild>
             <Button variant="outline" size="sm" className="font-mono text-xs">
               Check my store
@@ -145,14 +155,13 @@ export function DealCard({ deal }: { deal: Deal }) {
           </DialogTrigger>
           <DialogContent className="sm:max-w-sm">
             <DialogHeader>
-              <DialogTitle className="font-mono text-sm">
-                Check {store.name} near you
-              </DialogTitle>
+              <DialogTitle className="font-mono text-sm">Check {store.name} near you</DialogTitle>
             </DialogHeader>
 
             <div className="flex flex-col gap-3">
               <p className="text-sm text-muted-foreground">
-                Enter your ZIP code to see if <span className="text-foreground">{deal.name}</span> is confirmed at {money(deal.price)} nearby.
+                Enter your ZIP code to find the nearest {store.name} carrying{' '}
+                <span className="text-foreground">{deal.name}</span>.
               </p>
 
               <div className="flex gap-2">
@@ -170,24 +179,17 @@ export function DealCard({ deal }: { deal: Deal }) {
                 </Button>
               </div>
 
-              {error && (
-                <p className="text-sm text-destructive">{error}</p>
-              )}
+              {error && <p className="text-sm text-destructive">{error}</p>}
 
               {result && (
-                <div
-                  className={`rounded-md border p-3 text-sm ${
-                    result.status === 'confirmed'
-                      ? 'border-primary/40 bg-primary/10 text-foreground'
-                      : 'border-border bg-background text-muted-foreground'
-                  }`}
-                >
+                <div className="rounded-md border border-border bg-background p-3 text-sm">
                   <p className="font-medium text-foreground">{result.message}</p>
                   {result.nearestStore && (
-                    <p className="mt-1 font-mono text-[11px]">
-                      {result.nearestStore}
-                      {result.distanceMiles != null && ` · ${result.distanceMiles} mi`}
-                    </p>
+                    <div className="mt-1.5 font-mono text-[11px] text-muted-foreground">
+                      <p>{result.nearestStore}</p>
+                      {result.nearestAddress && <p>{result.nearestAddress}</p>}
+                      {result.distanceMiles != null && <p>{result.distanceMiles} mi away</p>}
+                    </div>
                   )}
                 </div>
               )}
