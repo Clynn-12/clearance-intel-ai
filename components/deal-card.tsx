@@ -1,15 +1,64 @@
+'use client'
+
+import { useState } from 'react'
 import Image from 'next/image'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog'
 import { STORES, type Deal } from '@/lib/deals'
-import { CheckCircle2, MapPin, Sparkles } from 'lucide-react'
+import { CheckCircle2, MapPin, Sparkles, Loader2 } from 'lucide-react'
 
 function money(n: number) {
-  return n < 1 ? `$${n.toFixed(2)}` : `$${n.toFixed(2)}`
+  return `$${n.toFixed(2)}`
+}
+
+type CheckResult = {
+  status: 'confirmed' | 'not_confirmed' | 'unknown'
+  message: string
+  nearestStore?: string
+  distanceMiles?: number
 }
 
 export function DealCard({ deal }: { deal: Deal }) {
   const store = STORES[deal.store]
   const off = Math.round((1 - deal.price / deal.retail) * 100)
+
+  const [open, setOpen] = useState(false)
+  const [zip, setZip] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [result, setResult] = useState<CheckResult | null>(null)
+  const [error, setError] = useState<string | null>(null)
+
+  async function handleCheck() {
+    if (!/^\d{5}$/.test(zip)) {
+      setError('Enter a valid 5-digit ZIP code')
+      return
+    }
+    setError(null)
+    setLoading(true)
+    setResult(null)
+
+    try {
+      const res = await fetch('/api/check-store', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sku: deal.sku, store: deal.store, zip }),
+      })
+      if (!res.ok) throw new Error('Lookup failed')
+      const data: CheckResult = await res.json()
+      setResult(data)
+    } catch {
+      setError('Could not check that ZIP right now. Try again shortly.')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   return (
     <article className="flex flex-col overflow-hidden rounded-lg border border-border bg-card">
@@ -88,9 +137,63 @@ export function DealCard({ deal }: { deal: Deal }) {
           </span>
         </div>
 
-        <Button variant="outline" size="sm" className="font-mono text-xs">
-          Check my store
-        </Button>
+        <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) { setResult(null); setError(null) } }}>
+          <DialogTrigger asChild>
+            <Button variant="outline" size="sm" className="font-mono text-xs">
+              Check my store
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-sm">
+            <DialogHeader>
+              <DialogTitle className="font-mono text-sm">
+                Check {store.name} near you
+              </DialogTitle>
+            </DialogHeader>
+
+            <div className="flex flex-col gap-3">
+              <p className="text-sm text-muted-foreground">
+                Enter your ZIP code to see if <span className="text-foreground">{deal.name}</span> is confirmed at {money(deal.price)} nearby.
+              </p>
+
+              <div className="flex gap-2">
+                <Input
+                  inputMode="numeric"
+                  maxLength={5}
+                  placeholder="ZIP code"
+                  value={zip}
+                  onChange={(e) => setZip(e.target.value.replace(/\D/g, ''))}
+                  className="font-mono"
+                  onKeyDown={(e) => e.key === 'Enter' && handleCheck()}
+                />
+                <Button onClick={handleCheck} disabled={loading} size="sm">
+                  {loading ? <Loader2 className="size-4 animate-spin" /> : 'Check'}
+                </Button>
+              </div>
+
+              {error && (
+                <p className="text-sm text-destructive">{error}</p>
+              )}
+
+              {result && (
+                <div
+                  className={`rounded-md border p-3 text-sm ${
+                    result.status === 'confirmed'
+                      ? 'border-primary/40 bg-primary/10 text-foreground'
+                      : 'border-border bg-background text-muted-foreground'
+                  }`}
+                >
+                  <p className="font-medium text-foreground">{result.message}</p>
+                  {result.nearestStore && (
+                    <p className="mt-1 font-mono text-[11px]">
+                      {result.nearestStore}
+                      {result.distanceMiles != null && ` · ${result.distanceMiles} mi`}
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </article>
   )
